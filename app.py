@@ -21,13 +21,11 @@ app.secret_key = 'jorge_cheira_mal' #NUNCA DEIXAR ESTA CHAVE EXPOSTA EM SISTEMAS
 
 #Função que cria e retorna a conexão com a base de dados MySQL
 def get_bdconnection():
-    #Mysql.connector.connect() é uma função que cria uma conexão com a base de dados MySQL
-    #Recebe como parâmetros o endereço, user, a passe e base de dados
     return mysql.connector.connect(
-        host = 'localhost', #localhost indica que a base de dados está na própria máquina
-        user = 'root', #Substitui pelo teu user MySQL
-        password = 'root', #Substitui pela tua password MySQL
-        database = 'databasedef' #nome da base de dados que foi criada
+        host = 'localhost',
+        user = 'root',         # <-- Confirme se este é o usuário correto
+        password = '',     # <-- Confirme se esta é a senha correta
+        database = 'basededados'
     )
 
 #Definimos uma rota(endereço) da aplicação com @app.route
@@ -35,21 +33,21 @@ def get_bdconnection():
 @app.route('/', methods=['GET', 'POST']) #Aqui permitimos os métodos GET(quando visita a página) e POST(quando envia o formulário)
 def login():
     if request.method == 'POST': #Se o método for post vv
-            username = request.form['username'] #Pega o username do formulário
-            password = request.form['passuser'] #Pega a password do formulário
+            username = request.form['nomeutilizador'] #Pega o username do formulário
+            password = request.form['passutilizador'] #Pega a password do formulário
             conn = get_bdconnection() #Faz a conexão com a base de dados
             cursor = conn.cursor(dictionary=True) #Cria um cursor para executar comandos SQL ler resultados
             #^^(Dictionary=True), faz com que os resultados sejam dicionários, para aceder facilmente por nome das colunas
-            cursor.execute("SELECT * FROM users WHERE username = %s AND passuser = %s", (username, password)) #Executa um comando SQL para selecionar o utilizador com o username e password
+            cursor.execute("SELECT * FROM utilizadores WHERE nomeutilizador = %s AND passutilizador = %s", (username, password)) #Executa um comando SQL para selecionar o utilizador com o username e password
             #^^ o %s são marcadores de posição para evitar ataques de SQL injection
             user = cursor.fetchone() #Pega o primeiro resultado da consulta, ou none se não houver resultados
             cursor.close() #Fecha o cursor para libertar recursos
             conn.close() #Fecha a conexão com a base de dados
 
             if user: #Se encontrou um utilizador com o nome e password correta
-                session['user_id'] = user['IDuser'] #Guarda o id do utilizador na sessão para lembrar quem está logado
-                session['is_admin'] = user['is_admin'] == 1 #Cria uma variável na sessão para sabe se o utilizador é admin na sessão
-                return redirect(url_for('admin' if session['is_admin'] else 'documentos')) #Redireciona para a página de admin se for admin, ou para a página documentos se for utilizador normal
+                session['user_id'] = user['IDutilizador']  # <-- Corrigido para o nome certo
+                session['is_admin'] = user.get('is_admin', 0) == 1  # Evita erro se não existir
+                return redirect(url_for('admin' if session['is_admin'] else 'documentos'))
             else: #Se não encontrou o utilizador
                 return "Login Inválido!" #Retorna uma mensagem de erro
             
@@ -58,20 +56,15 @@ def login():
 #Definimos a rota /documentos que mostra a lista dos documentos para utilizadores normais
 @app.route('/documentos')
 def documentos():
-    if 'user_id' not in session: #Verifica se primeiro se alguém está logado, verificando se 'user_id' está na sessão
-        return redirect(url_for('login')) #Se não estiver, redireciona para a página de login
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
     conn = get_bdconnection()
     cursor = conn.cursor(dictionary=True)
-    cursor.execute("""
-        SELECT files.*, users.username
-        FROM files
-        JOIN users ON files.IDuser = users.IDuser
-    """) #Busca todos os resultados da consulta em uma lista
-    documentos = cursor.fetchall() #Pega todos os resultados da consulta
+    cursor.execute("SELECT * FROM utilizadores")
+    documentos = cursor.fetchall()
     cursor.close()
     conn.close()
-
-    return render_template('documentos.html', documentos=documentos) #Renderiza a página de documentos, passando a lista "documentos" para que o template possa mostrar a página
+    return render_template('documentos.html', documentos=documentos)
 
 @app.route('/admin', methods=['GET', 'POST'])
 def admin():

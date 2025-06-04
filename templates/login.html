@@ -5,11 +5,11 @@
     <title>Login</title>
     <link
       rel="stylesheet"
-      href="{{ url_for('static', filename='styles.css') }}"
+      href="{{ url_for('static', filename='css/styles.css') }}"
     />
     <link
       rel="stylesheet"
-      href="{{ url_for('static', filename='fonts.css') }}"
+      href="{{ url_for('static', filename='css/fonts.css') }}"
     />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -22,10 +22,10 @@
     <h1 class="tektur-bold-normal">Login</h1>
     <form method="POST">
       <label for="username">Username:</label>
-      <input type="text" id="username" name="username" required />
+      <input type="text" id="nomeutilizador" name="nomeutilizador" required />
       <br />
       <label for="password">Password:</label>
-      <input type="password" id="password" name="password" required />
+      <input type="password" id="passutilizador" name="passutilizador" required />
       <br />
       <button type="submit">Login</button>
     </form>
